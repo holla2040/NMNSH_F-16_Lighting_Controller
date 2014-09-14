@@ -24,6 +24,16 @@ void processKey(uint32_t key) {
       }
   }
 }
+
+void modeLoop() {
+  uint32_t now = millis()/1000;
+
+  if ((now % 2) == 0) {
+    hw.o3Set(10);
+  } else {
+    hw.o3Off();
+  }
+}
  
 
 void loop() {
@@ -33,6 +43,6 @@ void loop() {
   if (irKey) {
     processKey(irKey);
   }
-
+  modeLoop();
 }
 
