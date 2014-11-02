@@ -42,7 +42,8 @@ enum {
 Lucky7 hw = Lucky7();
 
 #define TIMEOUTSTATUS    500
-#define TIMEOUTEVENING   240000L
+#define TIMEOUTEVENING   14400000L
+// 4 hours in milliseconds
 #define TIMEOUTOVERRIDE  30000
 uint32_t timeoutStatus;
 uint32_t timeoutOverride;
