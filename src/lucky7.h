@@ -21,12 +21,17 @@
 
 #define AVECNT 10
 
+// ((5/1024)/10000)*43000 ideal
+//
+#define BVSCALE 0.021878
+
+
 
 class Lucky7
 {
 private:
   uint32_t timeout;
-  uint16_t pc1[AVECNT], pc2[AVECNT];
+  uint16_t pc1[AVECNT], pc2[AVECNT], bc[AVECNT];
   uint8_t aveptr;
 public:
   uint8_t o1,o2,o3,o4,o5,o6,o7,o8,o13;
@@ -83,9 +88,12 @@ public:
   void o13On()            {o13 = ON;}
   void o13Set(uint8_t v)  {o13 = v;}
   void o13Off()           {o13 = 0;}
+  void o13Toggle()        {o13 = o13?OFF:ON;};       
 
   uint16_t photocell1();
   uint16_t photocell2();
+
+  float batteryVoltage();
 
 };
 #endif

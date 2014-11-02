@@ -4,6 +4,14 @@
 #include "IRremote.h"
 #include <EEPROM.h>
 
+/* 
+  output definitions
+  O1 wing, intake 
+  O2 taxi
+  O5 tail illumination
+  O6 tail collision
+*/
+
 /*
   see F16 Light Dimming Plot.ods
   pwm = a+b*exp(d*t/e)
@@ -23,8 +31,8 @@
 */
 
 /*  there's an interrupt collision with the IR routines and the PWM
-  1, 2, 5 work 
-  3, 6, 7 doesn't work 
+  1, 5, 6 work 
+  2, 3, 7 doesn't work 
 */
 
 enum {
@@ -33,10 +41,11 @@ enum {
 };
 
 enum {
-    MODE_OVERRIDE = 'O',
-    MODE_DAY = 'D',
-    MODE_EVENING = 'E',
-    MODE_NIGHT = 'N'
+    MODE_OVERRIDE   = 'O',
+    MODE_DAY        = 'D',
+    MODE_EVENING    = 'E',
+    MODE_NIGHT      = 'N',
+    MODE_BATTERYLOW = 'B'
 };
 
 Lucky7 hw = Lucky7();
@@ -45,9 +54,17 @@ Lucky7 hw = Lucky7();
 #define TIMEOUTEVENING   14400000L
 // 4 hours in milliseconds
 #define TIMEOUTOVERRIDE  30000
+#define TIMEOUTCOLLISION  4000
+#define TIMEOUTTAXI       300000
+#define TIMEOUTBATTERYLOW 100
+#define BATTERYLOW 11.5
+ 
 uint32_t timeoutStatus;
 uint32_t timeoutOverride;
 uint32_t timeoutEvening;
+uint32_t timeoutCollision;
+uint32_t timeoutTaxi;
+uint32_t timeoutBatteryLow;
 uint16_t lightThreshold;
 
 uint32_t positionUpdateTime;
@@ -84,6 +101,9 @@ void setup() {
 
     positionUpdateTime = 0;
     timeoutOverride = 0;
+    timeoutCollision = 0;
+    timeoutTaxi = 0;
+    timeoutBatteryLow = 0;
     mode = MODE_DAY;
 }
 
@@ -152,6 +172,11 @@ void processKey(uint32_t key) {
           timeoutEvening = millis() + TIMEOUTEVENING;
           mode = MODE_EVENING;
           break;
+      case 'N':
+      case RC65X_KEYSTOP:
+      case RM_YD065_KEYSTOP:
+        mode = MODE_NIGHT;
+        break;
       }
 }
 
@@ -168,32 +193,61 @@ void updateLights() {
     }
 
     if (mode == MODE_EVENING) {
-        if ((now % 20) == 0) {
-            hw.o13On();
-        } else {
-            hw.o13Off();
-        }
-    } else {
+      if ((now % 20) == 0) {
+        hw.o13On();
+      } else {
         hw.o13Off();
+      }
+    } else {
+      hw.o13Off();
     }
 
+    
     // no need to hammer this
     if (millis() > positionUpdateTime) {
+      positionUpdateTime = millis() + 10;
+      p = A + B * exp(D * float ((millis() % 1000)) / E);
       switch (mode) {
-        case MODE_DAY:
         case MODE_EVENING:
-          p = A + B * exp(D * float ((millis() % 1000)) / E);
-          hw.o1Set(p);
-          positionUpdateTime = millis() + 10;
+          hw.o1Set(p); // winginlent
+          hw.o5On();  // tail illum
+
+          if (millis() > timeoutCollision) {
+            hw.o6On();
+            delay(50);
+            hw.o6MoveTo(0,50);
+            timeoutCollision = millis() + TIMEOUTCOLLISION;
+          }
+
+
+          if (millis() > timeoutTaxi) {
+            hw.o2Toggle();
+            timeoutTaxi = millis() + TIMEOUTTAXI;
+          }
+          break;
+        case MODE_DAY:
+          hw.o1Set(p); // winginlent
+          hw.o2Off();  // taxi
+          hw.o5Off();  // tail illum
           break;
         case MODE_NIGHT:
           allOff();
           break;
+        case MODE_BATTERYLOW:
+          allOff();
+          if (millis() > timeoutBatteryLow) {
+            timeoutBatteryLow = millis() + TIMEOUTBATTERYLOW;
+            hw.o13Toggle();
+          }
       }
     }
 }
 
 void statemap() {
+  if (hw.batteryVoltage() < BATTERYLOW) {
+    mode = MODE_BATTERYLOW;
+    return;
+  }
   switch (mode) {
     case MODE_OVERRIDE:
       if (millis() > timeoutOverride) {
@@ -221,6 +275,11 @@ void statemap() {
             mode = MODE_DAY;
         }
       break;
+    case MODE_BATTERYLOW:
+      if (hw.batteryVoltage() > BATTERYLOW) {
+        mode = MODE_DAY;
+      }
+      break;
   }
 }
 
@@ -230,8 +289,10 @@ void status() {
         // Serial.print("\x1B[0;0f\x1B[K"); // home
         // Serial.print("\x1B[0J"); // clear
 
+        Serial.print(millis());
+
         timeoutStatus = millis() + TIMEOUTSTATUS;
-        Serial.print("lightLevel:");
+        Serial.print(" lightLevel:");
         Serial.print(hw.photocell2());
         Serial.print(" ");
         Serial.print("lightThreshold:");
@@ -242,6 +303,10 @@ void status() {
 
         sprintf(buffer," lights:%3d %3d %3d %3d %3d %3d %3d",hw.o1,hw.o2,hw.o3,hw.o4,hw.o5,hw.o6,hw.o7);
         Serial.print(buffer);
+
+        Serial.print(" ");
+        Serial.print("volt:");
+        Serial.print(hw.batteryVoltage(),2);
 
 
         if (mode == MODE_EVENING) {
@@ -275,24 +340,9 @@ void input() {
     }
 }
 
-
 void loop() {
     input();
-    updateLights();
     statemap();
+    updateLights();
     status();
-
-/*
-    hw.o1MoveTo(255,10);
-    hw.o1MoveTo(0,50);
-    delay(100);
-
-    hw.o5MoveTo(255,100);
-    hw.o5MoveTo(0,2000);
-    delay(100);
-*/
-
 }
-
-/*
-*/

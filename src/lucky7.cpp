@@ -48,6 +48,7 @@ uint32_t Lucky7::loop() {
 
   pc1[i] = analogRead(A4);
   pc2[i] = analogRead(A5);
+  bc[i]  = analogRead(A0);
 
   if (millis() > timeout) {
       if (irrecv.decode(&results)) {
@@ -76,6 +77,15 @@ uint16_t Lucky7::photocell2() {
         sum += pc2[i];
     }
     return (uint16_t)(sum/AVECNT);
+}
+
+float Lucky7::batteryVoltage() {
+    uint32_t sum = 0;
+    uint8_t i;
+    for (i = 0; i < AVECNT; i++) {
+        sum += bc[i];
+    }
+    return (float)(sum/AVECNT)*BVSCALE;
 }
 
 
