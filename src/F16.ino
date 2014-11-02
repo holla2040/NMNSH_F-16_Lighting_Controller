@@ -53,7 +53,7 @@ Lucky7 hw = Lucky7();
 #define TIMEOUTSTATUS    500
 #define TIMEOUTEVENING   14400000L
 // 4 hours in milliseconds
-#define TIMEOUTOVERRIDE  30000
+#define TIMEOUTOVERRIDE  60000
 #define TIMEOUTCOLLISION  4000
 #define TIMEOUTTAXI       300000
 #define TIMEOUTBATTERYLOW 100
