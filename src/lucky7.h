@@ -25,8 +25,6 @@
 //
 #define BVSCALE 0.021878
 
-
-
 class Lucky7
 {
 private:
