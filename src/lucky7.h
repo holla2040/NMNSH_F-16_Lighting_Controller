@@ -82,6 +82,7 @@ public:
   void o8On()             {o8 = ON;}
   void o8Set(uint8_t v)   {o8 = v;}
   void o8Off()            {o8 = 0;}
+  void o8Toggle()         {o8 = o8?OFF:ON;};       
 
   void o13On()            {o13 = ON;}
   void o13Set(uint8_t v)  {o13 = v;}

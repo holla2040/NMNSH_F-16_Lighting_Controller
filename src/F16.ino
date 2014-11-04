@@ -17,18 +17,10 @@
   pwm = a+b*exp(d*t/e)
 */
 
-#define A 275
-#define B -40
+#define A 305
+#define B -50
 #define D 1
 #define E 500
-
-/*
-// dim settings
-#define A 150
-#define B -40
-#define D 1
-#define E 800
-*/
 
 /*  there's an interrupt collision with the IR routines and the PWM
   1, 5, 6 work 
@@ -69,7 +61,7 @@ uint16_t collisionCount;
 // 1 hour
 
 #define TIMEOUTCOLLISIONON     50 
-#define TIMEOUTCOLLISIONSHORT  400 
+#define TIMEOUTCOLLISIONSHORT  250 
 #define TIMEOUTCOLLISIONLONG   2100
 #define TIMEOUTTAXI            300000
 #define TIMEOUTBATTERYLOW      100
@@ -207,7 +199,8 @@ void updateLights() {
     uint32_t now10ms = millis() / 100;
     uint8_t p;
 
-    if ((now10ms % 20) == 0) {
+    // if override fast blink status led, otherwise slow blink
+    if ((now10ms % ((mode == MODE_OVERRIDE)?3:20)) == 0) {
         hw.o8On();
     } else {
         hw.o8Off();
@@ -226,10 +219,10 @@ void updateLights() {
     
     // no need to hammer this
     if (millis() > positionUpdateTime) {
-      uint32_t millis1000 = millis() % 1250;
+      uint32_t millis1000 = millis() % 1100;
 
       positionUpdateTime = millis() + 10;
-      if (millis1000 > 950) {
+      if (millis1000 > 900) {
           p = 0;
       } else {
         p = A + B * exp(D * float (millis1000) / E);
@@ -298,6 +291,9 @@ void statemap() {
         if (hw.photocell2() < lightThreshold) {
             timeoutEvening = millis() + TIMEOUTEVENING;
             mode = MODE_EVENING;
+
+            hw.o2Off();
+            timeoutTaxi = 0;
         }
       break;
     case MODE_EVENING:
@@ -352,12 +348,12 @@ void status() {
         if (mode == MODE_EVENING) {
             Serial.print(" ");
             Serial.print("timeoutEvening:");
-            Serial.print(timeoutEvening - millis());
+            Serial.print(int((timeoutEvening - millis())/1000));
         }
         if (mode == MODE_OVERRIDE) {
             Serial.print(" ");
             Serial.print("timeoutOverride:");
-            Serial.print(timeoutOverride - millis());
+            Serial.print(int((timeoutOverride - millis())/1000));
         }
 
         Serial.println();
