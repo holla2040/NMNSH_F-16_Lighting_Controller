@@ -61,15 +61,18 @@ uint16_t collisionCount;
 
 
 
-#define TIMEOUTSTATUS    500
-#define TIMEOUTEVENING   14400000L
+#define TIMEOUTSTATUS          500
+#define TIMEOUTEVENING         14400000L
 // 4 hours in milliseconds
-#define TIMEOUTOVERRIDE  60000
+
+#define TIMEOUTOVERRIDE        3600000L
+// 1 hour
+
 #define TIMEOUTCOLLISIONON     50 
 #define TIMEOUTCOLLISIONSHORT  400 
 #define TIMEOUTCOLLISIONLONG   2100
-#define TIMEOUTTAXI       300000
-#define TIMEOUTBATTERYLOW 100
+#define TIMEOUTTAXI            300000
+#define TIMEOUTBATTERYLOW      100
 #define BATTERYLOW 11.5
  
 uint32_t timeoutStatus;
