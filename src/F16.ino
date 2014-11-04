@@ -53,7 +53,7 @@ uint16_t collisionCount;
 
 
 
-#define TIMEOUTSTATUS          500
+#define TIMEOUTSTATUS          1000
 #define TIMEOUTEVENING         14400000L
 // 4 hours in milliseconds
 
@@ -122,7 +122,9 @@ void processKey(uint32_t key) {
     switch (key) {
       case '0':
       case RC65X_KEY0:
+      case RC65X_KEYDOWN:
       case RM_YD065_KEY0:
+      case RM_YD065_KEYDOWN:
           allOff();
           break;
       case '1':
@@ -171,12 +173,18 @@ void processKey(uint32_t key) {
           break;
       case '8':
       case RC65X_KEY8:
+      case RC65X_KEYUP:
       case RM_YD065_KEY8:
+      case RM_YD065_KEYUP:
           allOn();
           break;
+
       case 'E':
       case RC65X_KEYPLAY:
+      case RC65X_KEYSELECT:
+
       case RM_YD065_KEYPLAY:
+      case RM_YD065_KEYOK:
           Serial.println("PLAY");
           timeoutEvening = millis() + TIMEOUTEVENING;
 
