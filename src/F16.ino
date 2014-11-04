@@ -187,6 +187,10 @@ void processKey(uint32_t key) {
       case RM_YD065_KEYPLAY:
           Serial.println("PLAY");
           timeoutEvening = millis() + TIMEOUTEVENING;
+
+          hw.o2Off();
+          timeoutTaxi = 0;
+
           mode = MODE_EVENING;
           break;
       case 'N':
