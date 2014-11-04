@@ -35,6 +35,8 @@
   2, 3, 7 doesn't work 
 */
 
+Lucky7 hw = Lucky7();
+
 enum {
     LIGHTTHRESHOLDADDRESSH,
     LIGHTTHRESHOLDADDRESSL
@@ -48,13 +50,24 @@ enum {
     MODE_BATTERYLOW = 'B'
 };
 
-Lucky7 hw = Lucky7();
+enum {
+    COLL_ON1,
+    COLL_OFF1,
+    COLL_ON2,
+    COLL_OFF2
+};
+
+uint16_t collisionCount;
+
+
 
 #define TIMEOUTSTATUS    500
 #define TIMEOUTEVENING   14400000L
 // 4 hours in milliseconds
 #define TIMEOUTOVERRIDE  60000
-#define TIMEOUTCOLLISION  4000
+#define TIMEOUTCOLLISIONON     50 
+#define TIMEOUTCOLLISIONSHORT  400 
+#define TIMEOUTCOLLISIONLONG   2100
 #define TIMEOUTTAXI       300000
 #define TIMEOUTBATTERYLOW 100
 #define BATTERYLOW 11.5
@@ -102,6 +115,7 @@ void setup() {
     positionUpdateTime = 0;
     timeoutOverride = 0;
     timeoutCollision = 0;
+    collisionCount = 0;
     timeoutTaxi = 0;
     timeoutBatteryLow = 0;
     mode = MODE_DAY;
@@ -183,17 +197,17 @@ void processKey(uint32_t key) {
 
 
 void updateLights() {
-    uint32_t now = millis() / 100;
+    uint32_t now10ms = millis() / 100;
     uint8_t p;
 
-    if ((now % 20) == 0) {
+    if ((now10ms % 20) == 0) {
         hw.o8On();
     } else {
         hw.o8Off();
     }
 
     if (mode == MODE_EVENING) {
-      if ((now % 20) == 0) {
+      if ((now10ms % 20) == 0) {
         hw.o13On();
       } else {
         hw.o13Off();
@@ -205,21 +219,40 @@ void updateLights() {
     
     // no need to hammer this
     if (millis() > positionUpdateTime) {
+      uint32_t millis1000 = millis() % 1250;
+
       positionUpdateTime = millis() + 10;
-      p = A + B * exp(D * float ((millis() % 1000)) / E);
+      if (millis1000 > 950) {
+          p = 0;
+      } else {
+        p = A + B * exp(D * float (millis1000) / E);
+      }
       switch (mode) {
         case MODE_EVENING:
           hw.o1Set(p); // winginlent
-          hw.o5On();  // tail illum
+          hw.o5On();   // tail illum
 
           if (millis() > timeoutCollision) {
-            hw.o6On();
-            delay(50);
-            hw.o6MoveTo(0,50);
-            timeoutCollision = millis() + TIMEOUTCOLLISION;
+            collisionCount++;
+            switch (collisionCount % 4) {
+                case COLL_ON1:
+                    hw.o6On();
+                    timeoutCollision = millis() + TIMEOUTCOLLISIONON;
+                    break;
+                case COLL_OFF1:
+                    hw.o6Off();
+                    timeoutCollision = millis() + TIMEOUTCOLLISIONSHORT;
+                    break;
+                case COLL_ON2:
+                    hw.o6On();
+                    timeoutCollision = millis() + TIMEOUTCOLLISIONON;
+                    break;
+                case COLL_OFF2:
+                    hw.o6Off();
+                    timeoutCollision = millis() + TIMEOUTCOLLISIONLONG;
+                    break;
+            }
           }
-
-
           if (millis() > timeoutTaxi) {
             hw.o2Toggle();
             timeoutTaxi = millis() + TIMEOUTTAXI;

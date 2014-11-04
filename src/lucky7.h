@@ -22,8 +22,8 @@
 #define AVECNT 10
 
 // ((5/1024)/10000)*43000 ideal
-//
-#define BVSCALE 0.021878
+// 12.16/553
+#define BVSCALE 0.02198915009
 
 class Lucky7
 {
