@@ -3,6 +3,8 @@
 #include "RMYD065.h"
 #include "IRremote.h"
 #include <EEPROM.h>
+#include <avr/wdt.h>
+
 
 /* 
   output definitions
@@ -366,6 +368,12 @@ void status() {
 
         Serial.println();
     }
+
+  if (millis() > 2592000000L) {
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    while (1) {}
+  }
 }
 
 void input() {
