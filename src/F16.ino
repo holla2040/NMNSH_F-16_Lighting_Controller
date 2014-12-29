@@ -3,8 +3,6 @@
 #include "RMYD065.h"
 #include "IRremote.h"
 #include <EEPROM.h>
-#include <avr/wdt.h>
-
 
 /* 
   output definitions
@@ -67,7 +65,8 @@ uint16_t collisionCount;
 #define TIMEOUTCOLLISIONLONG   2100
 #define TIMEOUTTAXI            300000
 #define TIMEOUTBATTERYLOW      100
-#define BATTERYLOW 11.8
+#define BATTERYLOW             11.8
+#define MILLISIN30DAYS         2592000000L
  
 uint32_t timeoutStatus;
 uint32_t timeoutOverride;
@@ -369,10 +368,8 @@ void status() {
         Serial.println();
     }
 
-  if (millis() > 2592000000L) {
-    wdt_disable();
-    wdt_enable(WDTO_15MS);
-    while (1) {}
+  if (millis() > MILLISIN30DAYS) {
+        asm volatile ("  jmp 0");
   }
 }
 
