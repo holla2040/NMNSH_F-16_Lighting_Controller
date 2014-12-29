@@ -67,7 +67,7 @@ uint16_t collisionCount;
 #define TIMEOUTCOLLISIONLONG   2100
 #define TIMEOUTTAXI            300000
 #define TIMEOUTBATTERYLOW      100
-#define BATTERYLOW 11.5
+#define BATTERYLOW 11.8
  
 uint32_t timeoutStatus;
 uint32_t timeoutOverride;
